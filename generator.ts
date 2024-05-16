@@ -42,8 +42,24 @@ export async function generateImage(request: ImageGenerationRequest): Promise<Bu
     const ctx = canvas.getContext('2d');
 
     const cardImage = await loadImage(request.cardImageUrl);
-    ctx.drawImage(cardImage, 0, 0, cardImage.width, cardImage.height);
+    const mask = await loadImage(request.maskImageUrl);
+    const icon = await loadImage(request.iconImageUrl);
 
+    ctx.drawImage(cardImage, 0, 0, cardImage.width, cardImage.height);
+    const boxWidth = 700;
+    const boxHeight = 850;
+
+    // Calculate the scaling factor to fit the icon within the bounding box
+    const factor = Math.min(boxWidth / icon.width, boxHeight / icon.height);
+
+    icon.width = icon.naturalWidth * factor;
+    icon.height = icon.naturalHeight * factor;
+
+    const iconX = cardImage.width / 2 - icon.width / 2;
+    const iconY = cardImage.height / 2 - icon.height / 2 + 80;
+
+    ctx.drawImage(icon, iconX, iconY, icon.width, icon.height);
+    ctx.drawImage(mask, 0, 0, mask.width, mask.height);
     drawIdPill(ctx, request.userId);
 
     if (request.diseaseName.length > 8) {
